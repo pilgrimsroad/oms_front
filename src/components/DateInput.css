@@ -1,0 +1,251 @@
+.date-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.date-input-label {
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+.date-input-row {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.date-input-row:focus-within {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.15);
+}
+
+.date-text-input {
+  border: none;
+  outline: none;
+  padding: 8px 10px;
+  font-size: 14px;
+  width: 7.5em;
+  color: #333;
+  background: transparent;
+  letter-spacing: 0.5px;
+}
+
+.calendar-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  height: 36px;
+  border: none;
+  border-left: 1px solid #f0f0f0;
+  background: #fafafa;
+  color: #888;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.calendar-icon-btn:hover {
+  background: #e6f4ff;
+  color: #1890ff;
+}
+
+/* 팝업 컨테이너 */
+.dp-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 999;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+/* 커스텀 헤더 */
+.dp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #1890ff;
+}
+
+.dp-nav {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 6px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.dp-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dp-title {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.dp-title:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dp-title--static {
+  cursor: default;
+}
+
+.dp-title--static:hover {
+  background: none;
+}
+
+/* react-datepicker inline 스타일 재정의 */
+.dp-popup .react-datepicker {
+  border: none;
+  box-shadow: none;
+  font-family: inherit;
+  width: 280px;
+}
+
+.dp-popup .react-datepicker__month-container {
+  width: 280px;
+}
+
+.dp-popup .react-datepicker__header {
+  background: transparent;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0;
+}
+
+.dp-popup .react-datepicker__day-names {
+  background: #fafafa;
+  padding: 6px 0 2px;
+}
+
+.dp-popup .react-datepicker__day-name {
+  color: #888;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dp-popup .react-datepicker__day {
+  color: #333;
+  border-radius: 50%;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.dp-popup .react-datepicker__day:hover {
+  background: #e6f4ff;
+  color: #1890ff;
+}
+
+.dp-popup .react-datepicker__day--selected {
+  background: #1890ff !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.dp-popup .react-datepicker__day--today {
+  font-weight: 700;
+  color: #1890ff;
+}
+
+.dp-popup .react-datepicker__day--today.react-datepicker__day--selected {
+  color: #fff;
+}
+
+.dp-popup .react-datepicker__day--outside-month {
+  color: #ccc;
+}
+
+/* 월 선택 뷰 */
+.dp-popup .react-datepicker__month--selecting-range,
+.dp-popup .react-datepicker__monthPicker {
+  padding: 8px 4px;
+}
+
+.dp-popup .react-datepicker__month-wrapper {
+  display: flex;
+}
+
+.dp-popup .react-datepicker__month-text {
+  flex: 1;
+  height: 40px;
+  line-height: 40px;
+  border-radius: 6px;
+  font-size: 13px;
+  padding: 0;
+  margin: 3px;
+  transition: background 0.15s;
+  text-align: center;
+}
+
+.dp-popup .react-datepicker__month-text:hover {
+  background: #e6f4ff;
+  color: #1890ff;
+}
+
+.dp-popup .react-datepicker__month-text--selected,
+.dp-popup .react-datepicker__month-text--keyboard-selected {
+  background: #1890ff !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* 연도 선택 뷰 */
+.dp-popup .react-datepicker__year {
+  padding: 8px 4px;
+}
+
+.dp-popup .react-datepicker__year-wrapper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 100%;
+  justify-items: stretch;
+}
+
+.dp-popup .react-datepicker__year-text {
+  height: 40px;
+  line-height: 40px;
+  border-radius: 6px;
+  font-size: 13px;
+  padding: 0;
+  margin: 3px;
+  transition: background 0.15s;
+  text-align: center;
+}
+
+.dp-popup .react-datepicker__year-text:hover {
+  background: #e6f4ff;
+  color: #1890ff;
+}
+
+.dp-popup .react-datepicker__year-text--selected,
+.dp-popup .react-datepicker__year-text--keyboard-selected {
+  background: #1890ff !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.dp-popup .react-datepicker__triangle {
+  display: none;
+}

@@ -1,0 +1,9 @@
+services:
+
+  oms-front:
+    build:
+      context: .
+      dockerfile: Dockerfile.standalone
+    container_name: oms-front
+    ports:
+      - "80:80"
