@@ -1,9 +1,15 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useRef, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchMessages } from '../api/messages';
 import { logout } from '../api/auth';
 import type { MessageResponse, MessageSearchRequest } from '../types';
-import DateInput from '../components/DateInput';
+import { ConfigProvider, DatePicker, Pagination } from 'antd';
+import ko_KR from 'antd/locale/ko_KR';
+import dayjs, { type Dayjs } from 'dayjs';
+import 'dayjs/locale/ko';
+import 'antd/dist/reset.css';
+
+dayjs.locale('ko');
 
 const MSG_TYPE_OPTIONS = [
   { value: '', label: '전체' },
@@ -27,47 +33,62 @@ const STATUS_OPTIONS = [
   { value: '9', label: '실패' },
 ];
 
-const today = () => {
-  const d = new Date();
-  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
-};
 
 export default function MessagePage() {
   const navigate = useNavigate();
   const userId = localStorage.getItem('userId') ?? '';
 
-  const [startDate, setStartDate] = useState(today());
-  const [endDate, setEndDate] = useState(today());
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs(), dayjs()]);
   const [msgType, setMsgType] = useState('');
   const [status, setStatus] = useState('');
   const [recipient, setRecipient] = useState('');
 
   const [results, setResults] = useState<MessageResponse[]>([]);
+  const [totalElements, setTotalElements] = useState(0);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [popupMsg, setPopupMsg] = useState<MessageResponse | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 100;
+
+  // 페이지 변경 시 재조회를 위해 마지막 검색 조건 보관
+  const lastReqRef = useRef<MessageSearchRequest | null>(null);
+
+  const fetchPage = async (req: MessageSearchRequest, page: number) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await searchMessages({ ...req, page: page - 1, size: PAGE_SIZE });
+      setResults(data.content);
+      setTotalElements(data.totalElements);
+      setSearched(true);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('조회에 실패했습니다.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
 
-    const req: MessageSearchRequest = { startDate, endDate };
+    const req: MessageSearchRequest = {
+      startDate: dateRange[0].format('YYYYMMDD'),
+      endDate: dateRange[1].format('YYYYMMDD'),
+    };
     if (msgType) req.msgType = Number(msgType);
     if (status) req.status = Number(status);
     if (recipient) req.recipient = recipient;
 
-    try {
-      const data = await searchMessages(req);
-      setResults(data);
-      setSearched(true);
-    } catch (err: any) {
-      setError(err.response?.data?.error ?? '조회에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
+    lastReqRef.current = req;
+    setCurrentPage(1);
+    await fetchPage(req, 1);
   };
 
   const handleLogout = async () => {
@@ -95,8 +116,22 @@ export default function MessagePage() {
       <div style={styles.searchBox}>
         <form onSubmit={handleSearch} style={styles.form}>
           <div style={styles.row}>
-            <DateInput label="시작일" value={startDate} onChange={setStartDate} />
-            <DateInput label="종료일" value={endDate} onChange={setEndDate} />
+            <ConfigProvider locale={ko_KR}>
+              <div style={styles.field}>
+                <label style={styles.label}>조회 기간</label>
+                <DatePicker.RangePicker
+                  value={dateRange}
+                  format={{ format: 'YYYY-MM-DD', type: 'mask' }}
+                  onChange={(dates) => {
+                    if (dates && dates[0] && dates[1]) {
+                      setDateRange([dates[0], dates[1]]);
+                    }
+                  }}
+                  allowClear={false}
+                  style={{ height: '36px', fontSize: '14px' }}
+                />
+              </div>
+            </ConfigProvider>
             <div style={styles.field}>
               <label style={styles.label}>메시지 유형</label>
               <select style={styles.input} value={msgType} onChange={(e) => setMsgType(e.target.value)}>
@@ -112,7 +147,7 @@ export default function MessagePage() {
             <div style={styles.field}>
               <label style={styles.label}>수신번호</label>
               <input
-                style={styles.input}
+                style={{ ...styles.input, height: '2.6em' }}
                 type="text"
                 value={recipient}
                 onChange={(e) => setRecipient(e.target.value)}
@@ -156,37 +191,54 @@ export default function MessagePage() {
       {/* 결과 테이블 */}
       {searched && (
         <div style={styles.tableWrap}>
-          <p style={{...styles.resultCount,textAlign:'right'}}>총 {results.length}건</p>
+          <p style={{...styles.resultCount, textAlign: 'right'}}>총 {totalElements.toLocaleString()}건</p>
           {results.length === 0 ? (
             <p style={styles.empty}>조회 결과가 없습니다.</p>
           ) : (
-            <table style={styles.table}>
-              <thead>
-                <tr style={styles.thead}>
-                  {['ID', '제목', '내용', '유형', '상태', '수신번호', '발송시간', '결과'].map((h) => (
-                    <th key={h} style={styles.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((msg) => (
-                  <tr key={msg.msgId} style={styles.tr}>
-                    <td style={styles.td}>{msg.msgId}</td>
-                    <td style={{ ...styles.td, textAlign: 'left' }}>{msg.subject}</td>
-                    <td style={{ ...styles.td, textAlign: 'center' }}>
-                      <button style={styles.iconBtn} onClick={() => setPopupMsg(msg)} title="내용 보기">
-                        💬
-                      </button>
-                    </td>
-                    <td style={styles.td}>{msg.msgTypeNm}</td>
-                    <td style={{ ...styles.td, ...statusStyle(msg.status) }}>{msg.statusNm}</td>
-                    <td style={styles.td}>{msg.rcptData}</td>
-                    <td style={styles.td}>{formatTime(msg.submitTime)}</td>
-                    <td style={styles.td}>{msg.result}</td>
+            <>
+              <table style={styles.table}>
+                <thead>
+                  <tr style={styles.thead}>
+                    {['ID', '제목', '내용', '유형', '상태', '수신번호', '발송시간', '결과'].map((h) => (
+                      <th key={h} style={styles.th}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {results.map((msg) => (
+                    <tr key={msg.msgId} style={styles.tr}>
+                      <td style={styles.td}>{msg.msgId}</td>
+                      <td style={{ ...styles.td, textAlign: 'left' }}>{msg.subject}</td>
+                      <td style={{ ...styles.td, textAlign: 'center' }}>
+                        <button style={styles.iconBtn} onClick={() => setPopupMsg(msg)} title="내용 보기">
+                          💬
+                        </button>
+                      </td>
+                      <td style={styles.td}>{msg.msgTypeNm}</td>
+                      <td style={{ ...styles.td, ...statusStyle(msg.status) }}>{msg.statusNm}</td>
+                      <td style={styles.td}>{msg.rcptData}</td>
+                      <td style={styles.td}>{formatTime(msg.submitTime)}</td>
+                      <td style={styles.td}>{msg.result}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={styles.pagination}>
+                <ConfigProvider locale={ko_KR}>
+                  <Pagination
+                    current={currentPage}
+                    pageSize={PAGE_SIZE}
+                    total={totalElements}
+                    onChange={(page) => {
+                      setCurrentPage(page);
+                      if (lastReqRef.current) fetchPage(lastReqRef.current, page);
+                    }}
+                    showSizeChanger={false}
+                    showTotal={(total) => `총 ${total.toLocaleString()}건`}
+                  />
+                </ConfigProvider>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -281,6 +333,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   tr: { borderBottom: '1px solid #f0f0f0' },
   td: { padding: '10px 12px', fontSize: '13px', color: '#333', whiteSpace: 'nowrap' },
+  pagination: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '16px 0 4px',
+  },
   iconBtn: {
     background: 'none',
     border: 'none',

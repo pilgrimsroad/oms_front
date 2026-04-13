@@ -17,6 +17,16 @@ export interface MessageSearchRequest {
   status?: number;
   msgType?: number;
   recipient?: string;
+  page?: number;
+  size?: number;
+}
+
+export interface PagedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
 }
 
 export interface MessageResponse {
