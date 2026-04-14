@@ -5,6 +5,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   accessToken: string;
+  refreshToken: string;
   tokenType: string;
   expiresInMinutes: number;
   userId: string;
@@ -43,4 +44,27 @@ export interface MessageResponse {
   rcptData: string;
   result: string;
   resultDesc: string;
+}
+
+export interface MessageSendRequest {
+  msgType: number;
+  callbackNum: string;
+  rcptData: string;
+  subject?: string;
+  message: string;
+  scheduleTime?: string;
+}
+
+export interface MessageSendResponse {
+  msgId: number;
+  msgType: number;
+  rcptData: string;
+  status: number;
+  requestedAt: string;
+  message: string;
+}
+
+export interface AgentProcessResponse {
+  processedCount: number;
+  message: string;
 }

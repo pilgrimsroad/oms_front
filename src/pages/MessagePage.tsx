@@ -1,8 +1,7 @@
 import { useState, useRef, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { searchMessages } from '../api/messages';
-import { logout } from '../api/auth';
 import type { MessageResponse, MessageSearchRequest } from '../types';
+import Layout from '../components/Layout';
 import { ConfigProvider, DatePicker, Pagination } from 'antd';
 import ko_KR from 'antd/locale/ko_KR';
 import dayjs, { type Dayjs } from 'dayjs';
@@ -35,8 +34,6 @@ const STATUS_OPTIONS = [
 
 
 export default function MessagePage() {
-  const navigate = useNavigate();
-  const userId = localStorage.getItem('userId') ?? '';
 
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs(), dayjs()]);
   const [msgType, setMsgType] = useState('');
@@ -91,27 +88,8 @@ export default function MessagePage() {
     await fetchPage(req, 1);
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('userId');
-      navigate('/login');
-    }
-  };
-
   return (
-    <div style={styles.page}>
-      {/* 헤더 */}
-      <div style={styles.header}>
-        <span style={styles.headerTitle}>OMS 메시지 조회</span>
-        <div style={styles.headerRight}>
-          <span style={styles.userInfo}>{userId}</span>
-          <button style={styles.logoutBtn} onClick={handleLogout}>로그아웃</button>
-        </div>
-      </div>
-
+    <Layout>
       {/* 검색 폼 */}
       <div style={styles.searchBox}>
         <form onSubmit={handleSearch} style={styles.form}>
@@ -242,7 +220,7 @@ export default function MessagePage() {
           )}
         </div>
       )}
-    </div>
+    </Layout>
   );
 }
 
@@ -259,28 +237,6 @@ function statusStyle(status: string | number): React.CSSProperties {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { minHeight: '100vh', backgroundColor: '#f0f2f5', fontFamily: 'sans-serif' },
-  header: {
-    backgroundColor: '#001529',
-    color: '#fff',
-    padding: '0 24px',
-    height: '56px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerTitle: { fontSize: '18px', fontWeight: 600 },
-  headerRight: { display: 'flex', alignItems: 'center', gap: '12px' },
-  userInfo: { fontSize: '14px', color: '#ccc' },
-  logoutBtn: {
-    padding: '5px 14px',
-    backgroundColor: 'transparent',
-    border: '1px solid #ccc',
-    color: '#ccc',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '13px',
-  },
   searchBox: {
     backgroundColor: '#fff',
     margin: '24px',

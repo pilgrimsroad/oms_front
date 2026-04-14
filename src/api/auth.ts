@@ -7,5 +7,6 @@ export const login = async (request: LoginRequest): Promise<LoginResponse> => {
 };
 
 export const logout = async (): Promise<void> => {
-  await client.post('/api/auth/logout');
+  const refreshToken = localStorage.getItem('refreshToken');
+  await client.post('/api/auth/logout', refreshToken ? { refreshToken } : undefined);
 };

@@ -5,7 +5,6 @@ const client = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// 요청 시 localStorage의 토큰을 자동으로 Authorization 헤더에 추가
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
@@ -14,15 +13,38 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// 401 응답 시 로그인 페이지로 이동
 client.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Access Token 만료 → Refresh Token으로 재발급 시도
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem('refreshToken');
+
+      if (refreshToken) {
+        try {
+          const { data } = await axios.post(
+            `${import.meta.env.VITE_API_URL ?? 'http://localhost:8080'}/api/auth/refresh`,
+            { refreshToken }
+          );
+          localStorage.setItem('accessToken', data.accessToken);
+          localStorage.setItem('refreshToken', data.refreshToken);
+          originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+          return client(originalRequest);
+        } catch {
+          // Refresh Token도 만료 → 로그인 페이지로
+        }
+      }
+
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('userId');
+      localStorage.removeItem('userType');
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );

@@ -17,10 +17,13 @@ export default function LoginPage() {
     try {
       const res = await login({ userId, userPassword });
       localStorage.setItem('accessToken', res.accessToken);
+      localStorage.setItem('refreshToken', res.refreshToken);
       localStorage.setItem('userId', res.userId);
+      localStorage.setItem('userType', res.userType);
       navigate('/messages');
-    } catch (err: any) {
-      setError(err.response?.data?.error ?? '로그인에 실패했습니다.');
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } }).response?.data?.error;
+      setError(msg ?? '로그인에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -29,7 +32,7 @@ export default function LoginPage() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2 style={styles.title}>OMS 메시지 조회</h2>
+        <h2 style={styles.title}>OMS</h2>
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.field}>
             <label style={styles.label}>아이디</label>
