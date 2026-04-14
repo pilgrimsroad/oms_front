@@ -1,7 +1,7 @@
 # OMS Front (메시지 조회 웹 페이지)
 
-OMS API 서버와 연동하는 메시지 이력 조회 웹 애플리케이션입니다.
-React + TypeScript 기반 SPA로, JWT 인증 및 메시지 검색 기능을 제공합니다.
+OMS API 서버와 연동하는 메시지 발송 요청 및 이력 조회 웹 애플리케이션입니다.
+React + TypeScript 기반 SPA로, JWT 인증, 메시지 발송 요청, 검색 기능을 제공합니다.
 
 ---
 
@@ -63,12 +63,15 @@ oms_front/
 │   │   ├── auth.ts          # 로그인/로그아웃 API 호출
 │   │   └── messages.ts      # 메시지 조회 API 호출
 │   ├── components/
+│   │   ├── Layout.tsx       # 공통 사이드바/헤더 레이아웃
 │   │   ├── DateInput.tsx    # 텍스트 + 캘린더 날짜 입력 컴포넌트
 │   │   ├── DateInput.css    # DateInput 스타일
 │   │   └── PrivateRoute.tsx # 인증 가드 (비로그인 시 /login 리다이렉트)
 │   ├── pages/
 │   │   ├── LoginPage.tsx    # 로그인 페이지
-│   │   └── MessagePage.tsx  # 메시지 조회 페이지
+│   │   ├── MessagePage.tsx  # 메시지 조회 페이지
+│   │   ├── SendPage.tsx     # 메시지 발송 요청 페이지
+│   │   └── AgentPage.tsx    # 에이전트 처리 페이지 (로컬 테스트용)
 │   ├── types/
 │   │   └── index.ts         # TypeScript 공통 타입 정의
 │   ├── App.tsx              # 라우팅 설정
@@ -94,6 +97,20 @@ oms_front/
 - **결과 테이블**: ID, 제목, 내용(팝업), 유형, 상태, 수신번호, 발송시간, 결과
 - **메시지 내용 팝업**: 💬 아이콘 클릭 시 제목·유형·본문 레이어 팝업 표시
 - 상단 우측 로그아웃 버튼
+
+### 발송 요청 페이지 `/send`
+
+- 메시지 유형, 발신번호, 수신번호, 내용 등 입력 후 발송 요청
+- SMS(80byte) / LMS·MMS(2000byte) 실시간 바이트 카운트 및 초과 시 발송 차단
+- 예약 발송 시간 입력 지원 (yyyyMMddHHmmss, 비워두면 즉시 발송)
+- `userType=2` 이상 계정만 접근 가능
+
+### 에이전트 처리 페이지 `/agent`
+
+- 발송 대기(status=0) 건수를 조회하고 일괄 처리 실행
+- 처리 후 상태가 발송 완료(status=2)로 변경됨
+- 실제 발송 에이전트 역할을 로컬에서 시뮬레이션하는 용도
+- `userType=99`(관리자) 또는 `userType=1`(API) 계정만 접근 가능
 
 ---
 
@@ -140,12 +157,14 @@ oms_front/
 
 OMS API 서버 초기 데이터에 포함된 계정입니다.
 
-| ID | 비밀번호 |
-|----|---------|
-| WEB_USER_01 | password1 |
-| WEB_USER_02 | password2 |
+| ID | 비밀번호 | userType | 접근 가능 페이지 |
+|----|---------|----------|----------------|
+| ADMIN | (초기 등록 필요) | 99 (관리자) | 전체 |
+| WEB_USER_01 | password1 | 2 (발송가능) | `/messages`, `/send` |
+| WEB_USER_02 | password2 | 2 (발송가능) | `/messages`, `/send` |
 
-> API 전용 계정(DEMO_USER, user_type=1)은 웹 로그인 불가
+> `DEMO_USER`(userType=1, API 전용)는 `/api/auth/token`으로만 토큰 발급 가능하며 웹 로그인 불가  
+> `/agent` 페이지는 userType=99 또는 1만 접근 가능
 
 ---
 
